@@ -1,0 +1,45 @@
+
+# Sensitive backend configuration
+/backend/src/main/resources/application.properties
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+
+# Generated build files
+**/target/
+**/node_modules/
+**/dist/
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Secret and credential files
+*secret*
+*secrets*
+*credential*
+*credentials*
+
+# Logs
+*.log
+
+# Local database files and backups
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+
+# IDE files
+.idea/
+.vscode/
+
+/.vscode/
+/.github/modernize/

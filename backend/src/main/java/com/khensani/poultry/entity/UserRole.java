@@ -1,0 +1,19 @@
+package com.khensani.poultry.entity;
+
+public enum UserRole {
+
+    SUPER_ADMIN,
+    ADMIN,
+    FARM_MANAGER,
+    DEPARTMENT_MANAGER,
+    VETERINARY_OFFICER,
+    INVENTORY_OFFICER,
+    SALES_OFFICER,
+    DELIVERY_MANAGER,
+    DRIVER,
+    FARM_WORKER,
+    ACCOUNTANT,
+    HR_OFFICER,
+    AUDITOR
+    
+}
