@@ -20,8 +20,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -85,6 +87,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/users/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/api/permissions/**").hasRole("SUPER_ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(
                         jwtAuthenticationFilter,
