@@ -112,10 +112,10 @@ function App() {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-[#e4e9df] bg-white transition-transform lg:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-64 flex-col overflow-hidden border-r border-[#e4e9df] bg-white transition-transform lg:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
       >
-        <div className="flex items-center gap-3 border-b border-[#edf0e9] px-5 py-6">
+        <div className="flex shrink-0 items-center gap-3 border-b border-[#edf0e9] px-5 py-6">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#174a35] text-xl font-bold text-white">
             K
           </div>
@@ -127,7 +127,7 @@ function App() {
           </div>
         </div>
 
-        <div className="px-5 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#929b8e]">
             Main menu
           </p>
@@ -141,8 +141,8 @@ function App() {
                   setMobileMenuOpen(false)
                 }}
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${activePage === item.label
-                    ? 'bg-[#e9f2e8] font-semibold text-[#174a35]'
-                    : 'text-[#667267] hover:bg-[#f5f7f2]'
+                  ? 'bg-[#e9f2e8] font-semibold text-[#174a35]'
+                  : 'text-[#667267] hover:bg-[#f5f7f2]'
                   }`}
               >
                 <span className="w-5 text-center text-lg">
@@ -154,7 +154,7 @@ function App() {
           </nav>
         </div>
 
-        <div className="mt-auto border-t border-[#edf0e9] p-5">
+        <div className="mt-auto shrink-0 border-t border-[#edf0e9] p-5">
           <p className="text-sm font-semibold">Growing Today.</p>
           <p className="text-sm text-[#849082]">Building Tomorrow.</p>
           <p className="mt-3 text-xs text-[#9ba396]">
