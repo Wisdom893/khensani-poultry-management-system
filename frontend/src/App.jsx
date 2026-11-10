@@ -7,6 +7,7 @@ import Employees from './pages/Employees'
 import PoultryHouses from './pages/PoultryHouses'
 import FlockManagement from './pages/FlockManagement'
 import UserManagement from './pages/UserManagement'
+import RolePermissions from './pages/RolePermissions'
 
 const navigation = [
   { label: 'Overview', icon: '▦' },
@@ -20,6 +21,7 @@ const navigation = [
   { label: 'Sales & Deliveries', icon: '▣' },
   { label: 'Reports', icon: '▥' },
   { label: 'User Management', icon: '♙' },
+  { label: 'Role Permissions', icon: '⚙' },
 ]
 
 function App() {
@@ -84,6 +86,10 @@ function App() {
 
     if (activePage === 'User Management') {
       return <UserManagement />
+    }
+
+    if (activePage === 'Role Permissions') {
+      return <RolePermissions />
     }
 
     return (

@@ -7,6 +7,7 @@ import com.khensani.poultry.entity.SystemModule;
 import com.khensani.poultry.entity.UserRole;
 import com.khensani.poultry.repository.RolePermissionRepository;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,47 @@ public class RolePermissionService {
                 .findByRoleAndSystemModule(role, systemModule)
                 .map(RolePermission::getPermissionLevel)
                 .orElse(PermissionLevel.NONE);
+    }
+
+    // Check whether the authenticated user has the required permission.
+    public boolean hasPermission(
+            Authentication authentication,
+            String moduleName,
+            String requiredLevelName) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        try {
+            String authority = authentication.getAuthorities()
+                    .stream()
+                    .map(Object::toString)
+                    .filter(role -> role.startsWith("ROLE_"))
+                    .findFirst()
+                    .orElse(null);
+
+            if (authority == null) {
+                return false;
+            }
+
+            UserRole role = UserRole.valueOf(
+                    authority.substring("ROLE_".length()));
+
+            SystemModule module = SystemModule.valueOf(moduleName);
+
+            PermissionLevel requiredLevel =
+                    PermissionLevel.valueOf(requiredLevelName);
+
+            PermissionLevel actualLevel =
+                    getPermission(role, module);
+
+            // Higher permission levels include lower permission levels.
+            return actualLevel.ordinal() >= requiredLevel.ordinal();
+
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
     }
 
     @Transactional
