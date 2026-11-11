@@ -5,8 +5,10 @@ import com.khensani.poultry.dto.CreateUserRequest;
 import com.khensani.poultry.dto.UserResponse;
 import com.khensani.poultry.entity.Employee;
 import com.khensani.poultry.entity.User;
+import com.khensani.poultry.entity.UserRole;
 import com.khensani.poultry.repository.EmployeeRepository;
 import com.khensani.poultry.repository.UserRepository;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -55,10 +57,11 @@ public class UserManagementService {
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
         user.setEnabled(true);
 
+        // If an employee is linked, use their assigned system role.
         if (request.getEmployeeId() != null) {
+
             Employee employee = employeeRepository
                     .findById(request.getEmployeeId())
                     .orElseThrow(() -> new ResponseStatusException(
@@ -78,6 +81,18 @@ public class UserManagementService {
             }
 
             user.setEmployee(employee);
+
+            UserRole employeeRole = employee.getSystemRole();
+
+            if (employeeRole == null) {
+                employeeRole = UserRole.FARM_WORKER;
+            }
+
+            user.setRole(employeeRole);
+
+        } else {
+            // Standalone accounts use the selected role.
+            user.setRole(request.getRole());
         }
 
         User savedUser = userRepository.save(user);
@@ -91,8 +106,7 @@ public class UserManagementService {
                         HttpStatus.NOT_FOUND,
                         "User account not found"));
 
-        if (user.getRole() == com.khensani.poultry.entity.UserRole.SUPER_ADMIN
-                && !enabled) {
+        if (user.getRole() == UserRole.SUPER_ADMIN && !enabled) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "The Super Admin account cannot be disabled here");
@@ -103,5 +117,4 @@ public class UserManagementService {
         User updatedUser = userRepository.save(user);
         return UserResponse.fromEntity(updatedUser);
     }
-
 }

@@ -22,6 +22,7 @@ function Employees() {
         email: '',
         phoneNumber: '',
         jobTitle: '',
+        systemRole: 'FARM_WORKER',
         status: 'ACTIVE',
         departmentId: '',
     }
@@ -103,6 +104,7 @@ function Employees() {
             email: employee.email || '',
             phoneNumber: employee.phoneNumber || '',
             jobTitle: employee.jobTitle || '',
+            systemRole: employee.systemRole || 'FARM_WORKER',
             status: employee.status || 'ACTIVE',
             departmentId: employee.department?.id
                 ? String(employee.department.id)
@@ -126,6 +128,7 @@ function Employees() {
                 email: employee.email || '',
                 phoneNumber: employee.phoneNumber || '',
                 jobTitle: employee.jobTitle,
+                systemRole: employee.systemRole || 'FARM_WORKER',
                 status: newStatus,
                 department: {
                     id: employee.department?.id,
@@ -159,6 +162,7 @@ function Employees() {
                 email: form.email.trim(),
                 phoneNumber: form.phoneNumber.trim(),
                 jobTitle: form.jobTitle.trim(),
+                systemRole: form.systemRole,
                 status: form.status,
                 department: {
                     id: Number(form.departmentId),
@@ -196,6 +200,7 @@ function Employees() {
             employee.surname,
             employee.email,
             employee.jobTitle,
+            employee.systemRole,
             departmentName,
         ]
             .join(' ')
@@ -356,6 +361,35 @@ function Employees() {
 
                         <div>
                             <label className="mb-1 block text-sm font-medium">
+                                System Role *
+                            </label>
+                            <select
+                                name="systemRole"
+                                value={form.systemRole}
+                                onChange={handleChange}
+                                required
+                                className="w-full rounded-lg border border-[#dce3d7] bg-white px-3 py-3 outline-none focus:border-[#286344]"
+                            >
+                                <option value="FARM_MANAGER">Farm Manager</option>
+                                <option value="DEPARTMENT_MANAGER">Department Manager</option>
+                                <option value="VETERINARY_OFFICER">Veterinary Officer</option>
+                                <option value="INVENTORY_OFFICER">Inventory Officer</option>
+                                <option value="SALES_OFFICER">Sales Officer</option>
+                                <option value="DELIVERY_MANAGER">Delivery Manager</option>
+                                <option value="DRIVER">Driver</option>
+                                <option value="FARM_WORKER">Farm Worker</option>
+                                <option value="POULTRY_HOUSE_CLEANER">Poultry House Cleaner</option>
+                                <option value="ACCOUNTANT">Accountant</option>
+                                <option value="HR_OFFICER">HR Officer</option>
+                                <option value="AUDITOR">Auditor</option>
+                            </select>
+                            <p className="mt-1 text-xs text-[#849082]">
+                                Determines which modules and actions the employee can access.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label className="mb-1 block text-sm font-medium">
                                 Department *
                             </label>
                             <select
@@ -440,6 +474,7 @@ function Employees() {
                             ['Email Address', selectedEmployee.email],
                             ['Phone Number', selectedEmployee.phoneNumber],
                             ['Job Title', selectedEmployee.jobTitle],
+                            ['System Role', (selectedEmployee.systemRole || 'FARM_WORKER').replaceAll('_', ' ')],
                             ['Department', selectedEmployee.department?.name],
                             [
                                 'Employment Status',
@@ -495,6 +530,7 @@ function Employees() {
                                     <th className="px-4 py-3 font-semibold">Employee</th>
                                     <th className="px-4 py-3 font-semibold">Contact</th>
                                     <th className="px-4 py-3 font-semibold">Job Title</th>
+                                    <th className="px-4 py-3 font-semibold">System Role</th>
                                     <th className="px-4 py-3 font-semibold">Department</th>
                                     <th className="px-4 py-3 font-semibold">Status</th>
                                     <th className="px-4 py-3 font-semibold">Actions</th>
@@ -525,6 +561,12 @@ function Employees() {
 
                                         <td className="px-4 py-4">
                                             {employee.jobTitle}
+                                        </td>
+
+                                        <td className="px-4 py-4">
+                                            <span className="inline-block rounded-full bg-[#e9f2e8] px-3 py-1 text-xs font-semibold text-[#174a35]">
+                                                {(employee.systemRole || 'FARM_WORKER').replaceAll('_', ' ')}
+                                            </span>
                                         </td>
 
                                         <td className="px-4 py-4">

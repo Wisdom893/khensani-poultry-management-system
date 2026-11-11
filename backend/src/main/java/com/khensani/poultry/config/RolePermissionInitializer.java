@@ -40,7 +40,8 @@ public class RolePermissionInitializer implements CommandLineRunner {
 
                     PermissionLevel permission = getDefaultPermission(role, module);
 
-                    RolePermission rolePermission = new RolePermission(role, module, permission);
+                    RolePermission rolePermission =
+                            new RolePermission(role, module, permission);
 
                     rolePermissionRepository.save(rolePermission);
                 }
@@ -133,6 +134,15 @@ public class RolePermissionInitializer implements CommandLineRunner {
                         PermissionLevel.VIEW;
                     case FLOCK_MANAGEMENT, TASKS_AND_CLEANING ->
                         PermissionLevel.CREATE;
+                    default -> PermissionLevel.NONE;
+                };
+
+            case POULTRY_HOUSE_CLEANER:
+                return switch (module) {
+                    case OVERVIEW, POULTRY_HOUSES ->
+                        PermissionLevel.VIEW;
+                    case TASKS_AND_CLEANING ->
+                        PermissionLevel.EDIT;
                     default -> PermissionLevel.NONE;
                 };
 

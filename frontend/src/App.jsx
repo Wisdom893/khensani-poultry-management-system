@@ -1,5 +1,4 @@
-
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Login from './pages/Login'
 import Overview from './pages/Overview'
 import Departments from './pages/Departments'
@@ -8,21 +7,25 @@ import PoultryHouses from './pages/PoultryHouses'
 import FlockManagement from './pages/FlockManagement'
 import UserManagement from './pages/UserManagement'
 import RolePermissions from './pages/RolePermissions'
+import { getMyPermissions } from './api/myPermissionService'
+import TasksCleaning from './pages/TasksCleaning'
+
 
 const navigation = [
-  { label: 'Overview', icon: '▦' },
-  { label: 'Poultry Houses', icon: '⌂' },
-  { label: 'Flock Management', icon: '◉' },
-  { label: 'Employees', icon: '♙' },
-  { label: 'Departments', icon: '☷' },
-  { label: 'Tasks & Cleaning', icon: '✓' },
-  { label: 'Inventory', icon: '▤' },
-  { label: 'Drivers & Vehicles', icon: '↗' },
-  { label: 'Sales & Deliveries', icon: '▣' },
-  { label: 'Reports', icon: '▥' },
-  { label: 'User Management', icon: '♙' },
-  { label: 'Role Permissions', icon: '⚙' },
+  { label: 'Overview', icon: '▦', modules: ['OVERVIEW'] },
+  { label: 'Poultry Houses', icon: '⌂', modules: ['POULTRY_HOUSES'] },
+  { label: 'Flock Management', icon: '◉', modules: ['FLOCK_MANAGEMENT'] },
+  { label: 'Employees', icon: '♙', modules: ['EMPLOYEES'] },
+  { label: 'Departments', icon: '☷', modules: ['DEPARTMENTS'] },
+  { label: 'Tasks & Cleaning', icon: '✓', modules: ['TASKS_AND_CLEANING'] },
+  { label: 'Inventory', icon: '▤', modules: ['INVENTORY'] },
+  { label: 'Drivers & Vehicles', icon: '↗', modules: ['DRIVERS_AND_VEHICLES'] },
+  { label: 'Sales & Deliveries', icon: '▣', modules: ['SALES', 'DELIVERIES'] },
+  { label: 'Reports', icon: '▥', modules: ['FINANCE'] },
+  { label: 'User Management', icon: '♙', superAdminOnly: true },
+  { label: 'Role Permissions', icon: '⚙', superAdminOnly: true },
 ]
+
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -42,6 +45,68 @@ function App() {
 
   const [activePage, setActivePage] = useState('Overview')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [permissions, setPermissions] = useState([])
+  const [permissionsLoading, setPermissionsLoading] = useState(true)
+  const [permissionError, setPermissionError] = useState('')
+
+
+  useEffect(() => {
+    if (!user) return
+
+    let cancelled = false
+
+    if (user.role === 'SUPER_ADMIN') {
+      Promise.resolve().then(() => {
+        if (!cancelled) {
+          setPermissions([])
+          setPermissionsLoading(false)
+        }
+      })
+    } else {
+      getMyPermissions()
+        .then((data) => {
+          if (!cancelled) {
+            setPermissions(data)
+            setPermissionError('')
+          }
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            setPermissions([])
+            setPermissionError(
+              error.message || 'Unable to load permissions.'
+            )
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setPermissionsLoading(false)
+          }
+        })
+    }
+
+    return () => {
+      cancelled = true
+    }
+  }, [user])
+
+
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN'
+
+  const visibleNavigation = navigation.filter((item) => {
+    if (isSuperAdmin) return true
+
+    if (item.superAdminOnly || !item.modules) return false
+
+    return item.modules.some((module) =>
+      permissions.some(
+        (permission) =>
+          permission.systemModule === module &&
+          permission.permissionLevel !== 'NONE'
+      )
+    )
+  })
+
 
   const handleLogin = (data) => {
     sessionStorage.setItem('khensani_token', data.token)
@@ -82,6 +147,10 @@ function App() {
 
     if (activePage === 'Employees') {
       return <Employees />
+    }
+
+    if (activePage === 'Tasks & Cleaning') {
+      return <TasksCleaning />
     }
 
     if (activePage === 'User Management') {
@@ -138,25 +207,35 @@ function App() {
             Main menu
           </p>
           <nav className="space-y-1">
-            {navigation.map((item) => (
-              <button
-                type="button"
-                key={item.label}
-                onClick={() => {
-                  setActivePage(item.label)
-                  setMobileMenuOpen(false)
-                }}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${activePage === item.label
-                  ? 'bg-[#e9f2e8] font-semibold text-[#174a35]'
-                  : 'text-[#667267] hover:bg-[#f5f7f2]'
-                  }`}
-              >
-                <span className="w-5 text-center text-lg">
-                  {item.icon}
-                </span>
-                {item.label}
-              </button>
-            ))}
+            {permissionsLoading ? (
+              <p className="px-3 py-3 text-sm text-[#849082]">
+                Loading permissions...
+              </p>
+            ) : permissionError ? (
+              <p className="px-3 py-3 text-sm text-red-600">
+                {permissionError}
+              </p>
+            ) : (
+              visibleNavigation.map((item) => (
+                <button
+                  type="button"
+                  key={item.label}
+                  onClick={() => {
+                    setActivePage(item.label)
+                    setMobileMenuOpen(false)
+                  }}
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition ${activePage === item.label
+                    ? 'bg-[#e9f2e8] font-semibold text-[#174a35]'
+                    : 'text-[#667267] hover:bg-[#f5f7f2]'
+                    }`}
+                >
+                  <span className="w-5 text-center text-lg">
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </button>
+              ))
+            )}
           </nav>
         </div>
 

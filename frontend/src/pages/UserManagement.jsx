@@ -13,6 +13,7 @@ const roles = [
     'DELIVERY_MANAGER',
     'DRIVER',
     'FARM_WORKER',
+    'POULTRY_HOUSE_CLEANER',
     'ACCOUNTANT',
     'HR_OFFICER',
     'AUDITOR',
@@ -70,10 +71,29 @@ function UserManagement() {
     function updateForm(event) {
         const { name, value } = event.target
 
-        setForm((previous) => ({
-            ...previous,
-            [name]: value,
-        }))
+        setForm((previous) => {
+            const updatedForm = {
+                ...previous,
+                [name]: value,
+            }
+
+            // When an employee is selected, show their assigned system role.
+            if (name === 'employeeId') {
+                if (!value) {
+                    updatedForm.role = 'FARM_WORKER'
+                } else {
+                    const selectedEmployee = employees.find(
+                        (employee) => String(employee.id) === value
+                    )
+
+                    if (selectedEmployee?.systemRole) {
+                        updatedForm.role = selectedEmployee.systemRole
+                    }
+                }
+            }
+
+            return updatedForm
+        })
     }
 
     async function handleSubmit(event) {
@@ -225,7 +245,8 @@ function UserManagement() {
                             value={form.role}
                             onChange={updateForm}
                             required
-                            className="w-full rounded-lg border border-[#dce3d7] bg-white px-3 py-2.5 outline-none focus:border-[#174a35]"
+                            disabled={Boolean(form.employeeId)}
+                            className="w-full rounded-lg border border-[#dce3d7] bg-white px-3 py-2.5 outline-none focus:border-[#174a35] disabled:cursor-not-allowed disabled:bg-[#f4f7ef] disabled:text-[#667267]"
                         >
                             {roles.map((role) => (
                                 <option key={role} value={role}>
@@ -233,6 +254,11 @@ function UserManagement() {
                                 </option>
                             ))}
                         </select>
+                        <p className="mt-1 text-xs text-[#849082]">
+                            {form.employeeId
+                                ? 'Role is automatically taken from the selected employee.'
+                                : 'Select a role for a standalone account, or link an employee to use their assigned system role.'}
+                        </p>
                     </div>
 
                     <div>
@@ -256,6 +282,11 @@ function UserManagement() {
                                 </option>
                             ))}
                         </select>
+                        {form.employeeId && (
+                            <p className="mt-1 text-xs font-medium text-[#286344]">
+                                Assigned role: {form.role.replaceAll('_', ' ')}
+                            </p>
+                        )}
                     </div>
 
                     <div className="sm:col-span-2">

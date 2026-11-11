@@ -1,16 +1,9 @@
 
 import { useEffect, useState } from "react";
 import { getPoultryHouses } from "../api/poultryHouseService";
-import {
-  createFlock,
-  getFlocks,
-  updateFlock,
-  getFlockStatistics,
-} from "../api/flockService";
-import {
-  createMortalityRecord,
-  getMortalityRecordsByFlock,
-} from "../api/mortalityService";
+import { createFlock, getFlocks, updateFlock, getFlockStatistics, } from "../api/flockService";
+import { createMortalityRecord, getMortalityRecordsByFlock, } from "../api/mortalityService";
+import { getMyPermissions } from "../api/myPermissionService";
 
 const EMPTY_FORM = {
   flockReference: "",
@@ -61,7 +54,8 @@ export default function FlockManagement() {
   const [showFlockForm, setShowFlockForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
-
+  const [permissionLevel, setPermissionLevel] = useState('NONE');
+  const [permissionLoading, setPermissionLoading] = useState(true);
   const [selectedFlock, setSelectedFlock] = useState(null);
   const [mortalityRecords, setMortalityRecords] = useState([]);
   const [showMortalityForm, setShowMortalityForm] = useState(false);
@@ -72,6 +66,58 @@ export default function FlockManagement() {
     notes: "",
   });
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const savedUser = JSON.parse(
+      sessionStorage.getItem("khensani_user") || "{}"
+    );
+
+    if (savedUser.role === "SUPER_ADMIN") {
+      Promise.resolve().then(() => {
+        if (!cancelled) {
+          setPermissionLevel("FULL");
+          setPermissionLoading(false);
+        }
+      });
+
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    getMyPermissions()
+      .then((data) => {
+        if (!cancelled) {
+          const flockPermission = data.find(
+            (item) => item.systemModule === "FLOCK_MANAGEMENT"
+          );
+
+          setPermissionLevel(
+            flockPermission?.permissionLevel || "NONE"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Unable to load flock permissions:", error);
+        if (!cancelled) {
+          setPermissionLevel("NONE");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPermissionLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const canView = permissionLevel !== "NONE";
+  const canCreate = ["CREATE", "EDIT", "FULL"].includes(permissionLevel);
+  const canEdit = ["EDIT", "FULL"].includes(permissionLevel);
   async function loadData() {
     setLoading(true);
     setError("");
@@ -181,8 +227,8 @@ export default function FlockManagement() {
       sum +
       Number(
         statistics[flock.id]?.currentBirdCount ??
-          flock.initialBirdCount ??
-          0
+        flock.initialBirdCount ??
+        0
       ),
     0
   );
@@ -332,6 +378,25 @@ export default function FlockManagement() {
     }
   }
 
+  if (permissionLoading) {
+    return (
+      <div className="rounded-2xl border border-[#e5e9df] bg-white p-10 text-center text-sm text-gray-500">
+        Loading permissions...
+      </div>
+    );
+  }
+
+  if (!canView) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+        <h2 className="text-lg font-bold text-red-800">Access Denied</h2>
+        <p className="mt-2 text-sm text-red-700">
+          You do not have permission to view Flock Management.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -347,13 +412,15 @@ export default function FlockManagement() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={openCreateForm}
-          className="rounded-xl bg-[#2f6840] px-5 py-3 text-sm font-semibold text-white hover:bg-[#245332]"
-        >
-          + Register Flock
-        </button>
+        {canCreate && (
+          <button
+            type="button"
+            onClick={openCreateForm}
+            className="rounded-xl bg-[#2f6840] px-5 py-3 text-sm font-semibold text-white hover:bg-[#245332]"
+          >
+            + Register Flock
+          </button>
+        )}
       </div>
 
       {error && (
@@ -397,7 +464,7 @@ export default function FlockManagement() {
         />
       </div>
 
-      {showFlockForm && (
+      {showFlockForm && (editingId === null ? canCreate : canEdit) && (
         <section className="rounded-2xl border border-[#e5e9df] bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-bold text-[#254d32]">
             {editingId !== null ? "Edit Flock" : "Register New Flock"}
@@ -615,7 +682,7 @@ export default function FlockManagement() {
                 ? "Register your first flock to start tracking bird populations."
                 : "Try a different search term or status."}
             </p>
-            {flocks.length === 0 && (
+            {flocks.length === 0 && canCreate && (
               <button
                 type="button"
                 onClick={openCreateForm}
@@ -676,10 +743,9 @@ export default function FlockManagement() {
                       </td>
                       <td className="px-5 py-4">
                         <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                            STATUS_STYLES[flock.status] ||
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[flock.status] ||
                             "bg-gray-100 text-gray-600"
-                          }`}
+                            }`}
                         >
                           {flock.status}
                         </span>
@@ -693,13 +759,15 @@ export default function FlockManagement() {
                           >
                             Details
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => openEditForm(flock)}
-                            className="rounded-lg px-3 py-2 font-semibold text-gray-600 hover:bg-gray-100"
-                          >
-                            Edit
-                          </button>
+                          {canEdit && (
+                            <button
+                              type="button"
+                              onClick={() => openEditForm(flock)}
+                              className="rounded-lg px-3 py-2 font-semibold text-gray-600 hover:bg-gray-100"
+                            >
+                              Edit
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -724,17 +792,19 @@ export default function FlockManagement() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowMortalityForm((current) => !current);
-                  setError("");
-                  setSuccess("");
-                }}
-                className="rounded-xl bg-[#2f6840] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#245332]"
-              >
-                + Record Mortality
-              </button>
+              {canCreate && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMortalityForm((current) => !current);
+                    setError("");
+                    setSuccess("");
+                  }}
+                  className="rounded-xl bg-[#2f6840] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#245332]"
+                >
+                  + Record Mortality
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -758,7 +828,7 @@ export default function FlockManagement() {
               label="Current Birds"
               value={Number(
                 statistics[selectedFlock.id]?.currentBirdCount ??
-                  selectedFlock.initialBirdCount
+                selectedFlock.initialBirdCount
               ).toLocaleString()}
               detail="After recorded mortality"
             />
@@ -771,7 +841,7 @@ export default function FlockManagement() {
             />
           </div>
 
-          {showMortalityForm && (
+          {showMortalityForm && canCreate && (
             <form
               onSubmit={handleMortalitySubmit}
               className="mt-6 rounded-xl border border-[#e5e9df] bg-[#fbfcf9] p-4 sm:p-5"
@@ -813,7 +883,7 @@ export default function FlockManagement() {
                       0,
                       Number(
                         statistics[selectedFlock.id]?.currentBirdCount ??
-                          selectedFlock.initialBirdCount
+                        selectedFlock.initialBirdCount
                       )
                     )}
                     step="1"

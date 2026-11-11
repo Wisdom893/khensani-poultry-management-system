@@ -1,3 +1,4 @@
+
 package com.khensani.poultry.entity;
 
 public enum UserRole {
@@ -12,8 +13,9 @@ public enum UserRole {
     DELIVERY_MANAGER,
     DRIVER,
     FARM_WORKER,
+    POULTRY_HOUSE_CLEANER,
     ACCOUNTANT,
     HR_OFFICER,
     AUDITOR
-    
+
 }

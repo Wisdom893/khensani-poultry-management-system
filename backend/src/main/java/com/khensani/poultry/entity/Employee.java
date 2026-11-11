@@ -1,3 +1,4 @@
+
 package com.khensani.poultry.entity;
 
 import jakarta.persistence.*;
@@ -8,7 +9,8 @@ import jakarta.validation.constraints.Size;
 @Entity
 @Table(name = "employees", uniqueConstraints = {
         @UniqueConstraint(columnNames = "employee_number"),
-        @UniqueConstraint(columnNames = "email") })
+        @UniqueConstraint(columnNames = "email")
+})
 public class Employee {
 
     @Id
@@ -44,6 +46,11 @@ public class Employee {
     @Column(name = "job_title", nullable = false, length = 100)
     private String jobTitle;
 
+    // Employee system access role
+    @Enumerated(EnumType.STRING)
+    @Column(name = "system_role", nullable = false, length = 40)
+    private UserRole systemRole = UserRole.FARM_WORKER;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EmploymentStatus status = EmploymentStatus.ACTIVE;
@@ -53,7 +60,6 @@ public class Employee {
     private Department department;
 
     public Employee() {
-
     }
 
     public Long getId() {
@@ -108,6 +114,14 @@ public class Employee {
         this.jobTitle = jobTitle;
     }
 
+    public UserRole getSystemRole() {
+        return systemRole;
+    }
+
+    public void setSystemRole(UserRole systemRole) {
+        this.systemRole = systemRole;
+    }
+
     public EmploymentStatus getStatus() {
         return status;
     }
@@ -123,5 +137,4 @@ public class Employee {
     public void setDepartment(Department department) {
         this.department = department;
     }
-
 }
